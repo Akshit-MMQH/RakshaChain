@@ -165,6 +165,16 @@ export default function DispatchPage() {
     }
   }
 
+  const handleGenerateQR = (shipment: Shipment) => {
+    const qrPayload = {
+      type: 'shipment',
+      ...shipment
+    }
+    const data = encodeURIComponent(JSON.stringify(qrPayload))
+    const url = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${data}`
+    window.open(url, '_blank')
+  }
+
   return (
     <div className="min-h-screen w-full bg-[#0f0f0f] relative text-white">
       {/* Small Grid Pattern */}
@@ -348,18 +358,32 @@ export default function DispatchPage() {
                       <td style={{ padding: '12px', fontFamily: '"Source Code Pro", monospace', fontSize: '14px' }}>{s.finalLoc}</td>
                       <td style={{ padding: '12px', fontFamily: '"Source Code Pro", monospace', fontSize: '14px' }}>{s.date}</td>
                       <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <button 
-                          onClick={() => handleDelete(s.id)}
-                          style={{
-                            ...buttonStyle,
-                            padding: '6px 12px',
-                            fontSize: '12px',
-                            backgroundColor: 'rgba(255, 0, 0, 0.3)',
-                            border: '2px solid rgba(255, 0, 0, 0.5)'
-                          }}
-                        >
-                          Delete
-                        </button>
+                        <div style={{ display: 'inline-flex', gap: '8px' }}>
+                          <button
+                            onClick={() => handleGenerateQR(s)}
+                            style={{
+                              ...buttonStyle,
+                              padding: '6px 12px',
+                              fontSize: '12px',
+                              backgroundColor: 'rgba(0, 153, 255, 0.25)',
+                              border: '2px solid rgba(0, 153, 255, 0.5)'
+                            }}
+                          >
+                            Generate QR
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(s.id)}
+                            style={{
+                              ...buttonStyle,
+                              padding: '6px 12px',
+                              fontSize: '12px',
+                              backgroundColor: 'rgba(255, 0, 0, 0.3)',
+                              border: '2px solid rgba(255, 0, 0, 0.5)'
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
