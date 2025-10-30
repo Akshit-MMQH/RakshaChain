@@ -33,9 +33,12 @@ export default function LoginPage() {
   }, [location])
 
   const handleLogin = () => {
+    const normalizedUsername = username.trim().toLowerCase()
+    const normalizedPassword = password.trim() // keep password case as-is by default
+
     if (isCheckpoint) {
       // Checkpoint officer login
-      if (username === 'admin' && password === 'admin123') {
+      if (normalizedUsername === 'admin' && normalizedPassword === 'admin123') {
         sessionStorage.setItem('isCheckpointLoggedIn', 'true')
         setError('')
         navigate('/checkpoint')
@@ -44,7 +47,7 @@ export default function LoginPage() {
       }
     } else {
       // Dispatch officer login
-      if (username === 'admin' && password === 'admin123') {
+      if (normalizedUsername === 'admin' && normalizedPassword === 'admin123') {
         sessionStorage.setItem('isLoggedIn', 'true')
         setError('')
         navigate('/dispatch')
@@ -95,9 +98,11 @@ export default function LoginPage() {
                   borderRadius: '32px',
                   backgroundColor: 'rgba(0, 0, 0, 0.8)',
                   color: 'rgb(255, 255, 255)',
-                  outline: 'none',
-                  textTransform: 'uppercase'
+                  outline: 'none'
                 }}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
               />
             </div>
 
@@ -119,9 +124,11 @@ export default function LoginPage() {
                   borderRadius: '32px',
                   backgroundColor: 'rgba(0, 0, 0, 0.8)',
                   color: 'rgb(255, 255, 255)',
-                  outline: 'none',
-                  textTransform: 'uppercase'
+                  outline: 'none'
                 }}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
               />
             </div>
 
