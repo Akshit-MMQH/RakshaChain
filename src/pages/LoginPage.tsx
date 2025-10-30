@@ -28,32 +28,36 @@ export default function LoginPage() {
   }
 
   useEffect(() => {
-    // Check if the URL contains 'checkpoint' to determine the login type
-    setIsCheckpoint(location.pathname.includes('checkpoint'))
+    // Check URL to determine the login type
+    if (location.pathname.includes('checkpoint')) {
+      setIsCheckpoint(true)
+    } else if (location.pathname.includes('receiving')) {
+      setIsCheckpoint(false)
+    } else {
+      setIsCheckpoint(false)
+    }
   }, [location])
 
   const handleLogin = () => {
-    const normalizedUsername = username.trim().toLowerCase()
-    const normalizedPassword = password.trim() // keep password case as-is by default
-
-    if (isCheckpoint) {
-      // Checkpoint officer login
-      if (normalizedUsername === 'admin' && normalizedPassword === 'admin123') {
+    if (username === 'admin' && password === 'admin123') {
+      if (isCheckpoint) {
+        // Checkpoint officer login
         sessionStorage.setItem('isCheckpointLoggedIn', 'true')
         setError('')
         navigate('/checkpoint')
+      } else if (location.pathname.includes('receiving')) {
+        // Receiving officer login
+        sessionStorage.setItem('isReceivingLoggedIn', 'true')
+        setError('')
+        navigate('/receiving')
       } else {
-        setError('Invalid credentials')
-      }
-    } else {
-      // Dispatch officer login
-      if (normalizedUsername === 'admin' && normalizedPassword === 'admin123') {
+        // Dispatch officer login
         sessionStorage.setItem('isLoggedIn', 'true')
         setError('')
         navigate('/dispatch')
-      } else {
-        setError('Invalid credentials')
       }
+    } else {
+      setError('Invalid credentials')
     }
   }
 
@@ -75,7 +79,7 @@ export default function LoginPage() {
       <section className="flex items-center justify-center px-4 relative z-10" style={{ minHeight: '100vh' }}>
         <div className="max-w-[480px] w-full text-center">
           <h1 className="text-light" style={{ marginBottom: 'clamp(24px, 5vh, 40px)', fontFamily: '"Orbitron", sans-serif', fontSize: 'clamp(1.5rem, 3.5vw, 2.2rem)', fontWeight: 700, color: '#ffffff' }}>
-            {isCheckpoint ? 'Checkpoint Login' : 'Dispatch Login'}
+            {isCheckpoint ? 'Checkpoint Login' : location.pathname.includes('receiving') ? 'Receiving Login' : 'Dispatch Login'}
           </h1>
           {error && <p className="text-red-500 mb-4">{error}</p>}
 
@@ -98,11 +102,9 @@ export default function LoginPage() {
                   borderRadius: '32px',
                   backgroundColor: 'rgba(0, 0, 0, 0.8)',
                   color: 'rgb(255, 255, 255)',
-                  outline: 'none'
+                  outline: 'none',
+                  textTransform: 'uppercase'
                 }}
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
               />
             </div>
 
@@ -124,11 +126,9 @@ export default function LoginPage() {
                   borderRadius: '32px',
                   backgroundColor: 'rgba(0, 0, 0, 0.8)',
                   color: 'rgb(255, 255, 255)',
-                  outline: 'none'
+                  outline: 'none',
+                  textTransform: 'uppercase'
                 }}
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
               />
             </div>
 
