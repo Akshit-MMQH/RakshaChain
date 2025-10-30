@@ -92,7 +92,8 @@ app.post('/api/shipments', async (req, res) => {
       supply,
       initLoc,
       finalLoc,
-      date
+      date,
+      status: 'pending'
     };
     
     shipments.push(newShipment);
@@ -111,32 +112,45 @@ app.post('/api/shipments', async (req, res) => {
 // PUT update shipment
 app.put('/api/shipments/:id', async (req, res) => {
   try {
-    const { name, supply, initLoc, finalLoc, date } = req.body;
+    console.log('Received PUT request for shipment:', req.params.id);
+    console.log('Request body:', req.body);
+    
+    const { name, supply, initLoc, finalLoc, date, status } = req.body;
     const shipments = await readShipments();
     const index = shipments.findIndex(s => s.id === req.params.id);
     
     if (index === -1) {
+      console.log('Shipment not found with ID:', req.params.id);
       return res.status(404).json({ error: 'Shipment not found' });
     }
     
     // Update shipment (keep the original ID)
+    const currentShipment = shipments[index];
+    console.log('Current shipment:', currentShipment);
+    
     shipments[index] = {
-      ...shipments[index],
-      name: name || shipments[index].name,
-      supply: supply || shipments[index].supply,
-      initLoc: initLoc || shipments[index].initLoc,
-      finalLoc: finalLoc || shipments[index].finalLoc,
-      date: date || shipments[index].date
+      ...currentShipment,
+      name: name || currentShipment.name,
+      supply: supply || currentShipment.supply,
+      initLoc: initLoc || currentShipment.initLoc,
+      finalLoc: finalLoc || currentShipment.finalLoc,
+      date: date || currentShipment.date,
+      status: status || currentShipment.status || 'pending' // Use provided status, fallback to current, or default to pending
     };
+    
+    console.log('Updated shipment:', shipments[index]);
     
     const success = await writeShipments(shipments);
     
     if (!success) {
+      console.error('Failed to write shipments to file');
       return res.status(500).json({ error: 'Failed to update shipment' });
     }
     
+    console.log('Successfully updated shipment');
     res.json(shipments[index]);
   } catch (error) {
+    console.error('Error updating shipment:', error);
     res.status(500).json({ error: 'Failed to update shipment' });
   }
 });
