@@ -59,20 +59,26 @@ const AdminPage: React.FC = () => {
     fetchShipments();
   }, [authed]);
 
-  // Load checkpoint scans from localStorage
+  // Load checkpoint scans from localStorage and filter for current shipments
   useEffect(() => {
     if (!authed) return;
     const scans = localStorage.getItem('checkpoint-scans');
     if (scans) {
       try {
-        setCheckpointScans(JSON.parse(scans));
+        const allScans = JSON.parse(scans);
+        // Filter scans to only include those for current shipments
+        const currentShipmentIds = shipments.map(s => s.id);
+        const relevantScans = allScans.filter((scan: CheckpointScan) => 
+          currentShipmentIds.includes(scan.shipmentId)
+        );
+        setCheckpointScans(relevantScans);
       } catch (e) {
         setCheckpointScans([]);
       }
     } else {
       setCheckpointScans([]);
     }
-  }, [authed]);
+  }, [authed, shipments]);
 
   // Poll shipments periodically so admin sees updates made by checkpoint officers
   useEffect(() => {
@@ -292,8 +298,8 @@ const AdminPage: React.FC = () => {
                         <span style={{
                           padding: '4px 12px',
                           borderRadius: '12px',
-                          backgroundColor: s.status === 'received' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 255, 0, 0.2)',
-                          color: s.status === 'received' ? '#00ff00' : '#ffff00'
+                          backgroundColor: s.status === 'received' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 0, 0, 0.15)',
+                          color: s.status === 'received' ? '#00ff00' : '#ff8888'
                         }}>
                           {s.status === 'received' ? 'Received' : 'Not Received'}
                         </span>
