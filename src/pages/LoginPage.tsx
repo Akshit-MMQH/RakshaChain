@@ -22,7 +22,7 @@ export default function LoginPage() {
     color: 'rgb(255, 255, 255)',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    textTransform: 'uppercase' as const,
+    // textTransform: 'uppercase' as const,
     backdropFilter: 'blur(0.5px)',
     width: '100%',
     maxWidth: 'clamp(260px, 80vw, 320px)'
