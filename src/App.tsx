@@ -5,6 +5,9 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import DispatchPage from './pages/DispatchPage'
 import CheckpointPage from './pages/CheckpointPage'
+import Rakesh from './pages/Rakesh'
+import Aryan from './pages/Aryan'
+import Mohan from './pages/Mohan'
 import AdminPage from './pages/AdminPage'
 import ReceivingPage from './pages/ReceivingPage'
 
@@ -17,7 +20,10 @@ function App() {
         <Route path="/checkpoint/login" element={<LoginPage />} />
         <Route path="/receiving/login" element={<LoginPage />} />
         <Route path="/dispatch" element={<DispatchPage />} />
-        <Route path="/checkpoint" element={<CheckpointPage />} />
+  <Route path="/checkpoint" element={<CheckpointPage />} />
+  <Route path="/checkpoint/rakesh" element={<Rakesh />} />
+  <Route path="/checkpoint/aryan" element={<Aryan />} />
+  <Route path="/checkpoint/mohan" element={<Mohan />} />
         <Route path="/receiving" element={<ReceivingPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<HomePage />} />
