@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Camera, X, CheckCircle } from 'lucide-react';
 import BarcodeScannerComponent from 'react-qr-barcode-scanner';
 
-export default function CheckpointPage() {
+export default function CheckpointPage({ officerName, checkpointLoc }: { officerName?: string; checkpointLoc?: string } = {}) {
   const [scanning, setScanning] = useState(false);
   const [scannedData, setScannedData] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +39,99 @@ export default function CheckpointPage() {
     window.location.href = '/';
   };
 
+  const handleVerify = () => {
+    (async () => {
+      if (!scannedData) {
+        alert('No scanned data to verify')
+        return
+      }
+
+      // try parse id from scanned data
+      let parsed: any = null
+      try { parsed = JSON.parse(scannedData) } catch (e) { parsed = null }
+
+      const shipmentId = parsed && parsed.id ? parsed.id : null
+      if (!shipmentId) {
+        alert('Cannot verify: scanned payload does not contain shipment id')
+        return
+      }
+
+      const API_URL = 'http://localhost:5000/api'
+      const timestamp = new Date().toISOString()
+
+      try {
+        // Send PUT to backend to update status and receivedAt
+        const resp = await fetch(`${API_URL}/shipments/${shipmentId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'received', receivedAt: timestamp })
+        })
+
+        if (!resp.ok) {
+          const text = await resp.text()
+          console.error('Failed to update shipment:', text)
+          alert('Failed to update shipment on server')
+          return
+        }
+
+        const updated = await resp.json()
+
+        // persist checkpoint scan locally so Admin page can read it
+        const scansRaw = localStorage.getItem('checkpoint-scans')
+        const scans = scansRaw ? JSON.parse(scansRaw) : []
+        scans.unshift({ officer: officerName || sessionStorage.getItem('checkpoint-user') || 'Unknown', shipmentId, location: checkpointLoc || '', action: 'verified', timestamp })
+        localStorage.setItem('checkpoint-scans', JSON.stringify(scans))
+
+        alert('Shipment verified and admin notified')
+        console.log('Verified shipment:', updated)
+      } catch (err) {
+        console.error('Error verifying shipment:', err)
+        alert('Error verifying shipment')
+      }
+    })()
+  }
+
+  const handleTamper = () => {
+    (async () => {
+      if (!scannedData) {
+        alert('No scanned data to mark tampering')
+        return
+      }
+
+      let parsed: any = null
+      try { parsed = JSON.parse(scannedData) } catch (e) { parsed = null }
+      const shipmentId = parsed && parsed.id ? parsed.id : null
+      const API_URL = 'http://localhost:5000/api'
+      const timestamp = new Date().toISOString()
+
+      try {
+        if (shipmentId) {
+          const resp = await fetch(`${API_URL}/shipments/${shipmentId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'tampered', tamperedAt: timestamp })
+          })
+
+          if (!resp.ok) {
+            const text = await resp.text()
+            console.error('Failed to update shipment tamper status:', text)
+          }
+        }
+
+        const scansRaw = localStorage.getItem('checkpoint-scans')
+        const scans = scansRaw ? JSON.parse(scansRaw) : []
+        scans.unshift({ officer: officerName || sessionStorage.getItem('checkpoint-user') || 'Unknown', shipmentId: shipmentId || 'unknown', location: checkpointLoc || '', action: 'tampered', timestamp })
+        localStorage.setItem('checkpoint-scans', JSON.stringify(scans))
+
+        alert('Tampering alert recorded')
+        console.warn('Tampering alert for scanned data:', scannedData)
+      } catch (err) {
+        console.error('Error recording tampering alert:', err)
+        alert('Error recording tampering alert')
+      }
+    })()
+  }
+
   return (
     <div className="min-h-screen w-full bg-[#0f0f0f] relative text-white">
       <div className="absolute inset-0 z-0"
@@ -49,6 +142,13 @@ export default function CheckpointPage() {
       />
       <section className="flex items-center justify-center px-4 relative z-10" style={{ minHeight: '100vh', paddingTop: '40px', paddingBottom: '40px' }}>
         <div className="max-w-[900px] w-full">
+          {/* Optional officer header: name on left, location on right */}
+          {(officerName || checkpointLoc) && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', padding: '0 6px' }}>
+              <div style={{ fontFamily: 'Source Code Pro, monospace', color: 'rgba(255,255,255,0.9)', fontSize: '15px' }}>{officerName ? `Officer: ${officerName}` : ''}</div>
+              <div style={{ fontFamily: 'Source Code Pro, monospace', color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>{checkpointLoc ? `${checkpointLoc}` : ''}</div>
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
             <h1 style={{ fontFamily: 'Orbitron, sans-serif', fontSize: 'clamp(1.5rem, 2.8vw, 2rem)', color: 'rgb(242,242,242)', fontWeight: 700 }}>Checkpoint Scanner</h1>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -133,9 +233,17 @@ export default function CheckpointPage() {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-                    <button onClick={handleNewScan} style={{ ...buttonStyle, padding: '14px 32px', fontSize: '16px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                      <Camera size={20}/> Scan Another
+                  <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button onClick={handleNewScan} style={{ ...buttonStyle, padding: '14px 24px', fontSize: '15px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      <Camera size={18}/> Scan Another
+                    </button>
+
+                    <button onClick={handleVerify} style={{ ...buttonStyle, padding: '12px 20px', fontSize: '14px', backgroundColor: 'rgba(0,128,0,0.18)', border: '2px solid rgba(0,128,0,0.35)' }}>
+                      Verify
+                    </button>
+
+                    <button onClick={handleTamper} style={{ ...buttonStyle, padding: '12px 20px', fontSize: '14px', backgroundColor: 'rgba(255,0,0,0.18)', border: '2px solid rgba(255,0,0,0.35)' }}>
+                      Tampering Alert
                     </button>
                   </div>
                 </div>
