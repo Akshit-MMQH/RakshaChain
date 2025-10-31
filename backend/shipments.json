@@ -5,6 +5,43 @@
     "supply": "armoury",
     "initLoc": "Delhi",
     "finalLoc": "LOC",
-    "date": "2025-10-24"
+    "date": "2025-10-24",
+    "status": "tampered"
+  },
+  {
+    "name": "wiejrwei",
+    "id": "idjwfijwe",
+    "supply": "wiejwijr",
+    "initLoc": "wiejwjriw",
+    "finalLoc": "fiwjewijr",
+    "date": "2132-02-13",
+    "status": "received"
+  },
+  {
+    "name": "hello",
+    "id": "hello",
+    "supply": "hello",
+    "initLoc": "hello",
+    "finalLoc": "hello",
+    "date": "2122-12-31",
+    "status": "received"
+  },
+  {
+    "name": "asdjsn",
+    "id": "jdjndj",
+    "supply": "jdnjfdn",
+    "initLoc": "jdnfsjn",
+    "finalLoc": "djwnf",
+    "date": "3231-02-12",
+    "status": "received"
+  },
+  {
+    "name": "3weqqe",
+    "id": "wqeew",
+    "supply": "ewwrw",
+    "initLoc": "wewrewrw",
+    "finalLoc": "werwr",
+    "date": "7777-07-07",
+    "status": "pending"
   }
 ]

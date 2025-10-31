@@ -40,28 +40,42 @@ export default function LoginPage() {
   }, [location])
 
   const handleLogin = () => {
-    const user = username.trim().toLowerCase()
-    const pass = password.trim().toLowerCase()
-    if (user === 'admin' && pass === 'admin123') {
-      if (isCheckpoint) {
-        // Checkpoint officer login
-        sessionStorage.setItem('isCheckpointLoggedIn', 'true')
-        setError('')
-        navigate('/checkpoint')
-      } else if (location.pathname.includes('receiving')) {
-        // Receiving officer login
+    // Checkpoint login: accept any non-empty username and navigate to officer-specific page
+    if (isCheckpoint) {
+      if (username.trim().length === 0) {
+        setError('Please enter username')
+        return
+      }
+
+      // mark checkpoint session and the checkpoint user
+      sessionStorage.setItem('isCheckpointLoggedIn', 'true')
+      sessionStorage.setItem('checkpoint-user', username)
+      setError('')
+      navigate(`/checkpoint/${username.trim().toLowerCase()}`)
+      return
+    }
+
+    // Receiving login (unchanged behavior): require admin credentials for now
+    if (location.pathname.includes('receiving')) {
+      if (username === 'admin' && password === 'admin123') {
         sessionStorage.setItem('isReceivingLoggedIn', 'true')
         setError('')
         navigate('/receiving')
-      } else {
-        // Dispatch officer login
-        sessionStorage.setItem('isLoggedIn', 'true')
-        setError('')
-        navigate('/dispatch')
+        return
       }
-    } else {
       setError('Invalid credentials')
+      return
     }
+
+    // Dispatch / other logins still require admin creds
+    if (username === 'admin' && password === 'admin123') {
+      sessionStorage.setItem('isLoggedIn', 'true')
+      setError('')
+      navigate('/dispatch')
+      return
+    }
+
+    setError('Invalid credentials')
   }
 
   return (
