@@ -60,11 +60,11 @@ export default function CheckpointPage({ officerName, checkpointLoc }: { officer
       const timestamp = new Date().toISOString()
 
       try {
-        // Send PUT to backend to update status and receivedAt
+        // Send PUT to backend to update status and verifiedAt
         const resp = await fetch(`${API_URL}/shipments/${shipmentId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'received', receivedAt: timestamp })
+          body: JSON.stringify({ status: 'verified', verifiedAt: timestamp })
         })
 
         if (!resp.ok) {
