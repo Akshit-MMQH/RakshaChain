@@ -13,16 +13,11 @@ type Shipment = {
   finalLoc: string;
   date: string;
   status?: string;
-  receivedAt?: string;
-  tamperedAt?: string;
 };
 
 type CheckpointScan = {
-  officer: string;
-  shipmentId: string;
-  location: string;
-  action: 'verified' | 'tampered' | string;
-  timestamp: string;
+  data: string;
+  date: string;
 };
 
 const ADMIN_USERNAME = 'ADMIN';
@@ -64,36 +59,9 @@ const AdminPage: React.FC = () => {
     if (!authed) return;
     const scans = localStorage.getItem('checkpoint-scans');
     if (scans) {
-      try {
-        setCheckpointScans(JSON.parse(scans));
-      } catch (e) {
-        setCheckpointScans([]);
-      }
+      setCheckpointScans(JSON.parse(scans));
     } else {
       setCheckpointScans([]);
-    }
-  }, [authed]);
-
-  // Poll shipments periodically so admin sees updates made by checkpoint officers
-  useEffect(() => {
-    if (!authed) return;
-    let cancelled = false
-    const fetchShipments = async () => {
-      try {
-        const res = await fetch('http://localhost:5000/api/shipments');
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!cancelled) setShipments(data);
-      } catch (e) {
-        // ignore
-      }
-    }
-
-    // initial fetch already handled elsewhere, but poll for changes
-    const id = setInterval(fetchShipments, 5000)
-    return () => {
-      cancelled = true
-      clearInterval(id)
     }
   }, [authed]);
 
@@ -327,38 +295,23 @@ const AdminPage: React.FC = () => {
           {checkpointScans.length === 0 ? (
             <div style={{ fontFamily: 'Source Code Pro, monospace', color: 'rgba(255,255,255,0.7)' }}>No checkpoint scans found.</div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <th style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', color: '#fff' }}>Officer</th>
-                    <th style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', color: '#fff' }}>Shipment ID</th>
-                    <th style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', color: '#fff' }}>Location</th>
-                    <th style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', color: '#fff' }}>Action</th>
-                    <th style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', color: '#fff' }}>Timestamp</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {checkpointScans.map((scan, idx) => (
-                    <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                      <td style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', color: '#fff' }}>{scan.officer}</td>
-                      <td style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', color: '#fff' }}>{scan.shipmentId}</td>
-                      <td style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', color: '#fff' }}>{scan.location}</td>
-                      <td style={{ padding: 12 }}>
-                        {scan.action === 'verified' ? (
-                          <span style={{ padding: '6px 12px', borderRadius: 12, backgroundColor: 'rgba(0,255,0,0.12)', color: '#8fff8f', fontFamily: 'Source Code Pro, monospace' }}>Verified</span>
-                        ) : scan.action === 'tampered' ? (
-                          <span style={{ padding: '6px 12px', borderRadius: 12, backgroundColor: 'rgba(255,0,0,0.12)', color: '#ff8f8f', fontFamily: 'Source Code Pro, monospace' }}>Tampered</span>
-                        ) : (
-                          <span style={{ padding: '6px 12px', borderRadius: 12, backgroundColor: 'rgba(255,255,0,0.08)', color: '#fff', fontFamily: 'Source Code Pro, monospace' }}>{scan.action}</span>
-                        )}
-                      </td>
-                      <td style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', color: '#fff' }}>{new Date(scan.timestamp).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ul style={{ paddingLeft: 0, listStyle: 'none', margin: 0 }}>
+              {checkpointScans.map((scan, idx) => (
+                <li key={idx} style={{ 
+                  marginBottom: 16, 
+                  background: 'rgba(0,0,0,0.3)', 
+                  padding: 16, 
+                  borderRadius: 12, 
+                  fontFamily: 'Source Code Pro, monospace', 
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <div><b style={{ color: 'rgba(255,255,255,0.7)' }}>Data:</b> <span style={{ wordBreak: 'break-all', color: '#fff' }}>{scan.data}</span></div>
+                  <div><b style={{ color: 'rgba(255,255,255,0.7)' }}>Date:</b> <span style={{ color: '#fff' }}>{scan.date}</span></div>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
 
