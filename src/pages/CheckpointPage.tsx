@@ -94,21 +94,53 @@ export default function CheckpointPage() {
                 </button>
               </div>
             )}
-            {scannedData && (
-              <div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'rgba(0, 255, 0, 0.2)', marginBottom: '24px' }}>
-                  <CheckCircle size={40} color="rgba(0, 255, 0, 1)" />
+            {scannedData && (() => {
+              // Try to parse scannedData as JSON to render a structured view
+              let parsed: any = null
+              try {
+                parsed = JSON.parse(scannedData)
+              } catch (e) {
+                parsed = null
+              }
+
+              return (
+                <div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'rgba(0, 255, 0, 0.2)', marginBottom: '24px' }}>
+                    <CheckCircle size={40} color="rgba(0, 255, 0, 1)" />
+                  </div>
+                  <h2 style={{ fontFamily: 'Orbitron, sans-serif', fontSize: 'clamp(1.2rem, 2.2vw, 1.5rem)', color: '#fff', fontWeight: 700, marginBottom: '12px' }}>QR Code Scanned!</h2>
+
+                  {/* Structured view when JSON */}
+                  {parsed && typeof parsed === 'object' ? (
+                    <div style={{ marginTop: '16px', marginBottom: '24px', overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 12 }}>
+                        <tbody>
+                          {Object.keys(parsed).map((key) => (
+                            <tr key={key} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                              <td style={{ padding: '12px 16px', fontFamily: 'Source Code Pro, monospace', fontSize: '13px', color: 'rgba(255,255,255,0.7)', width: '35%', textTransform: 'capitalize' }}>{key}</td>
+                              <td style={{ padding: '12px 16px', fontFamily: 'Source Code Pro, monospace', fontSize: '14px', color: '#fff', whiteSpace: 'pre-wrap' }}>
+                                {typeof parsed[key] === 'object' ? JSON.stringify(parsed[key], null, 2) : String(parsed[key])}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '12px', padding: '16px', marginTop: '24px', marginBottom: '24px', wordBreak: 'break-all' }}>
+                      <p style={{ fontFamily: 'Source Code Pro, monospace', fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Scanned Data</p>
+                      <pre style={{ fontFamily: 'Source Code Pro, monospace', fontSize: '13px', color: '#fff', margin: 0, whiteSpace: 'pre-wrap' }}>{scannedData}</pre>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                    <button onClick={handleNewScan} style={{ ...buttonStyle, padding: '14px 32px', fontSize: '16px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      <Camera size={20}/> Scan Another
+                    </button>
+                  </div>
                 </div>
-                <h2 style={{ fontFamily: 'Orbitron, sans-serif', fontSize: 'clamp(1.2rem, 2.2vw, 1.5rem)', color: '#fff', fontWeight: 700, marginBottom: '12px' }}>QR Code Scanned!</h2>
-                <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '12px', padding: '16px', marginTop: '24px', marginBottom: '24px', wordBreak: 'break-all' }}>
-                  <p style={{ fontFamily: 'Source Code Pro, monospace', fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Scanned Data</p>
-                  <p style={{ fontFamily: 'Source Code Pro, monospace', fontSize: '15px', color: '#fff' }}>{scannedData}</p>
-                </div>
-                <button onClick={handleNewScan} style={{ ...buttonStyle, padding: '14px 32px', fontSize: '16px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                  <Camera size={20}/> Scan Another
-                </button>
-              </div>
-            )}
+              )
+            })()}
           </div>
           <div style={{ marginTop: '24px', border: '2px dashed rgba(255, 255, 255, 0.15)', borderRadius: '16px', backgroundColor: 'rgba(0, 0, 0, 0.3)', padding: '20px', textAlign: 'center' }}>
             <p style={{ fontFamily: 'Source Code Pro, monospace', fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', lineHeight: '1.6' }}>
