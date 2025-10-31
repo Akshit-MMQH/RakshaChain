@@ -28,7 +28,7 @@ export default function Hero() {
     textTransform: 'uppercase' as const,
     backdropFilter: 'blur(0.5px)',
     width: '100%',
-    maxWidth: 'min(320px, 85vw)'
+    maxWidth: 'min(340px, 85vw)'
   };
 
   return (
