@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { isAdminAuthenticated, setAdminAuthenticated } from '../lib/adminAuth';
 
+
 // Shipment type
 type Shipment = {
   name: string;
@@ -310,9 +311,10 @@ const AdminPage: React.FC = () => {
               </table>
             </div>
           )}
-        </section>
+  </section>
 
-        {/* Checkpoint Scans Section */}
+
+  {/* Checkpoint Scans Section */}
         <section style={{ 
           marginTop: 40, 
           marginBottom: 40,
