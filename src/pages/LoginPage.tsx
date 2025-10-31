@@ -40,7 +40,9 @@ export default function LoginPage() {
   }, [location])
 
   const handleLogin = () => {
-    if (username === 'ADMIN' && password === 'ADMIN123') {
+    const user = username.trim().toLowerCase()
+    const pass = password.trim().toLowerCase()
+    if (user === 'admin' && pass === 'admin123') {
       if (isCheckpoint) {
         // Checkpoint officer login
         sessionStorage.setItem('isCheckpointLoggedIn', 'true')
@@ -103,9 +105,11 @@ export default function LoginPage() {
                   borderRadius: '32px',
                   backgroundColor: 'rgba(0, 0, 0, 0.8)',
                   color: 'rgb(255, 255, 255)',
-                  outline: 'none',
-                  textTransform: 'uppercase'
+                  outline: 'none'
                 }}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
               />
             </div>
 
@@ -127,9 +131,11 @@ export default function LoginPage() {
                   borderRadius: '32px',
                   backgroundColor: 'rgba(0, 0, 0, 0.8)',
                   color: 'rgb(255, 255, 255)',
-                  outline: 'none',
-                  textTransform: 'uppercase'
+                  outline: 'none'
                 }}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
               />
             </div>
 
