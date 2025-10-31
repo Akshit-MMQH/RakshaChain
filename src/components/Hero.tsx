@@ -88,7 +88,7 @@ export default function Hero() {
               e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
             }}
           >
-            Dispatch Officer
+            Dispatch Operator
           </button>
           
           <button 
@@ -106,7 +106,7 @@ export default function Hero() {
               e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
             }}
           >
-            Checkpoint Officer
+            Checkpoint Operator
           </button>
           
           <button 
@@ -121,7 +121,7 @@ export default function Hero() {
               e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
             }}
           >
-            Receiving Officer
+            Receiving Operator  
           </button>
         </div>
       </div>
