@@ -110,6 +110,7 @@ export default function Hero() {
           </button>
           
           <button 
+            onClick={() => navigate('/receiving/login')}
             style={buttonStyle}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
