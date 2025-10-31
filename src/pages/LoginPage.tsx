@@ -40,7 +40,7 @@ export default function LoginPage() {
   }, [location])
 
   const handleLogin = () => {
-    if (username === 'admin' && password === 'admin123') {
+    if (username === 'ADMIN' && password === 'ADMIN123') {
       if (isCheckpoint) {
         // Checkpoint officer login
         sessionStorage.setItem('isCheckpointLoggedIn', 'true')
