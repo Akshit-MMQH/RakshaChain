@@ -6,6 +6,19 @@ const cors = require('cors');
 const app = express();
 const PORT = 5000;
 const SHIPMENTS_FILE = path.join(__dirname, 'shipments.json');
+const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA0M2Y2MGI1MGVhYzQxZjNiNWNiZDNjMDllYWQ4YWM1IiwiaCI6Im11cm11cjY0In0=';
+
+// Prefer built-in fetch (Node 18+). If unavailable, try node-fetch dynamically.
+let _fetch = global.fetch;
+if (typeof _fetch !== 'function') {
+  try {
+    // Use node-fetch v2 (CommonJS) for compatibility with require()
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    _fetch = require('node-fetch');
+  } catch (_) {
+    _fetch = null;
+  }
+}
 
 // Middleware
 app.use(cors());
@@ -174,6 +187,115 @@ app.delete('/api/shipments/:id', async (req, res) => {
     res.json({ message: 'Shipment deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete shipment' });
+  }
+});
+
+// --- Helpers for OpenRouteService ---
+async function geocodeLocation(text) {
+  if (!_fetch) throw new Error('fetch is not available on this Node version');
+  const url = `https://api.openrouteservice.org/geocode/search?api_key=${encodeURIComponent(ORS_API_KEY)}&text=${encodeURIComponent(text)}&size=1`;
+  const resp = await _fetch(url);
+  if (!resp.ok) {
+    const t = await resp.text();
+    throw new Error(`Geocode failed: ${resp.status} ${t}`);
+  }
+  const data = await resp.json();
+  if (!data.features || !data.features.length) throw new Error(`Location not found: ${text}`);
+  const feat = data.features[0];
+  return { coords: feat.geometry.coordinates, name: feat.properties.label };
+}
+
+async function getRouteORS(startCoords, endCoords, profile) {
+  if (!_fetch) throw new Error('fetch is not available on this Node version');
+  const url = `https://api.openrouteservice.org/v2/directions/${profile}`;
+  const resp = await _fetch(url, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
+      'Authorization': ORS_API_KEY,
+      'Content-Type': 'application/json; charset=utf-8'
+    },
+    body: JSON.stringify({ coordinates: [startCoords, endCoords] })
+  });
+  if (!resp.ok) {
+    const t = await resp.text();
+    throw new Error(`Route failed: ${resp.status} ${t}`);
+  }
+  return await resp.json();
+}
+
+function formatDuration(seconds) {
+  const s = Math.max(0, Math.floor(Number(seconds) || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return h > 0 ? `${h}h ${m}m` : `${m} min`;
+}
+
+function formatDistance(meters) {
+  const km = (Number(meters) || 0) / 1000;
+  return `${km.toFixed(2)} km`;
+}
+
+// POST /api/estimate  { startLocation, endLocation, mode }
+app.post('/api/estimate', async (req, res) => {
+  try {
+    const { startLocation, endLocation, mode } = req.body || {};
+    if (!startLocation || !endLocation) return res.status(400).json({ error: 'startLocation and endLocation are required' });
+    const profile = mode || 'driving-car';
+
+    const start = await geocodeLocation(startLocation);
+    const end = await geocodeLocation(endLocation);
+    const data = await getRouteORS(start.coords, end.coords, profile);
+
+    if (!data.routes || !data.routes.length) return res.status(404).json({ error: 'No route found' });
+    const route = data.routes[0];
+    const duration = route.summary && route.summary.duration ? route.summary.duration : 0;
+    const distance = route.summary && route.summary.distance ? route.summary.distance : 0;
+
+    return res.json({
+      startName: start.name,
+      endName: end.name,
+      duration,
+      distance,
+      durationFormatted: formatDuration(duration),
+      distanceFormatted: formatDistance(distance),
+      profile
+    });
+  } catch (e) {
+    return res.status(500).json({ error: e && e.message ? e.message : 'Failed to estimate travel time' });
+  }
+});
+
+// GET /api/shipments/:id/estimate?mode=driving-car
+app.get('/api/shipments/:id/estimate', async (req, res) => {
+  try {
+    const profile = req.query.mode || 'driving-car';
+    const shipments = await readShipments();
+    const shipment = shipments.find(s => s.id === req.params.id);
+    if (!shipment) return res.status(404).json({ error: 'Shipment not found' });
+    if (!shipment.initLoc || !shipment.finalLoc) return res.status(400).json({ error: 'Shipment lacks initLoc/finalLoc' });
+
+    const start = await geocodeLocation(shipment.initLoc);
+    const end = await geocodeLocation(shipment.finalLoc);
+    const data = await getRouteORS(start.coords, end.coords, profile);
+
+    if (!data.routes || !data.routes.length) return res.status(404).json({ error: 'No route found' });
+    const route = data.routes[0];
+    const duration = route.summary && route.summary.duration ? route.summary.duration : 0;
+    const distance = route.summary && route.summary.distance ? route.summary.distance : 0;
+
+    return res.json({
+      shipmentId: shipment.id,
+      startName: start.name,
+      endName: end.name,
+      duration,
+      distance,
+      durationFormatted: formatDuration(duration),
+      distanceFormatted: formatDistance(distance),
+      profile
+    });
+  } catch (e) {
+    return res.status(500).json({ error: e && e.message ? e.message : 'Failed to estimate travel time for shipment' });
   }
 });
 

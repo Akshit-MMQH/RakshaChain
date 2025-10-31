@@ -37,6 +37,7 @@ const AdminPage: React.FC = () => {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [loadingShipments, setLoadingShipments] = useState(true);
   const [checkpointScans, setCheckpointScans] = useState<CheckpointScan[]>([]);
+  const [estimates, setEstimates] = useState<Record<string, { loading: boolean; error?: string; data?: { durationFormatted: string; distanceFormatted: string; profile: string } }>>({});
 
   const navigate = useNavigate();
 
@@ -58,6 +59,45 @@ const AdminPage: React.FC = () => {
     };
     fetchShipments();
   }, [authed]);
+
+  // Fetch estimated travel time for each shipment (initLoc -> finalLoc)
+  useEffect(() => {
+    if (!authed) return;
+    if (!shipments.length) return;
+
+    const fetchEstimate = async (shipmentId: string) => {
+      setEstimates(prev => ({ ...prev, [shipmentId]: { loading: true } }));
+      try {
+        const res = await fetch(`http://localhost:5000/api/shipments/${encodeURIComponent(shipmentId)}/estimate?mode=driving-car`);
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `HTTP ${res.status}`);
+        }
+        const json = await res.json();
+        setEstimates(prev => ({
+          ...prev,
+          [shipmentId]: {
+            loading: false,
+            data: {
+              durationFormatted: json.durationFormatted,
+              distanceFormatted: json.distanceFormatted,
+              profile: json.profile || 'driving-car'
+            }
+          }
+        }));
+      } catch (e: any) {
+        setEstimates(prev => ({ ...prev, [shipmentId]: { loading: false, error: e && e.message ? e.message : 'Failed to estimate' } }));
+      }
+    };
+
+    shipments.forEach(s => {
+      const entry = estimates[s.id];
+      if (!entry || (!entry.loading && !entry.data && !entry.error)) {
+        fetchEstimate(s.id);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed, shipments]);
 
   // Load checkpoint scans from localStorage
   useEffect(() => {
@@ -277,6 +317,7 @@ const AdminPage: React.FC = () => {
                     <th style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', fontSize: 14, color: '#fff', textAlign: 'center' }}>Final Location</th>
                     <th style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', fontSize: 14, color: '#fff', textAlign: 'center' }}>Date</th>
                     <th style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', fontSize: 14, color: '#fff', textAlign: 'center' }}>Status</th>
+                    <th style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', fontSize: 14, color: '#fff', textAlign: 'center' }}>Est Time/Travel</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -297,6 +338,15 @@ const AdminPage: React.FC = () => {
                         }}>
                           {s.status === 'received' ? 'Received' : 'Not Received'}
                         </span>
+                      </td>
+                      <td style={{ padding: 12, fontFamily: 'Source Code Pro, monospace', fontSize: 14, color: '#fff', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        {(() => {
+                          const e = estimates[s.id];
+                          if (!e || e.loading) return 'Estimating...';
+                          if (e.error) return '—';
+                          if (e.data) return `${e.data.durationFormatted} • ${e.data.distanceFormatted}`;
+                          return '—';
+                        })()}
                       </td>
                     </tr>
                   ))}
